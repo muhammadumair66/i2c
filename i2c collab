@@ -1,0 +1,50 @@
+# This program assumes that you already have a i2c device installed at the Bus you provide.
+# If you have no device, neither an i2c-stub, it will generate an error ("No such bus exist.")
+# Please provide the i2c-stub or a device for the code to work properly.
+# List of available i2c devices will be generated at each iteration of infinite loop.
+
+!apt-get install i2c-tools
+!pip install smbus
+
+# The "!" is a Shell Command in Colab.
+# If you run it on a Linux machine, add "import os" and type the command following ! in os.system("[COMMAND]").
+
+from smbus2 import SMBus
+import os
+
+
+while True:
+  devices = os.popen('i2cdetect -l').read()
+
+  cmd = input("Enter command: ")
+  cmdArray = cmd.split()
+
+  if len(cmdArray) > 0:
+    if cmdArray[0] == 'i2cget':
+      if len(cmdArray) == 4:
+        if "i2c-"+cmdArray[1] in devices:
+          bus = SMBus(0)
+          b = bus.read_byte_data(int(cmdArray[2], 0), int(cmdArray[3])) # Convert address from string (in hex) to integer and then pass it. Same with the register number.
+          print(hex(b))
+          bus.close()
+        else:
+            print("No such bus exists.")
+      else:
+        print("Invalid Parameters.")
+        print("USAGE: i2cget [BUS] [HEX_ADDRESS] [REGISTER]")
+    elif cmdArray[0] == 'i2cset':
+      if len(cmdArray) == 5:
+        if "i2c-"+cmdArray[1] in devices:
+            bus = SMBus(0)
+            data = int(cmdArray[4], 0)
+            bus.write_byte_data(int(cmdArray[2], 0), int(cmdArray[3]), data) # Convert address from string (in hex) to integer and then pass it. Same with the register number.
+            bus.close()
+        else:
+            print("No such bus exists.")
+      else:
+        print("Invalid Parameters.")
+        print("USAGE: i2cset [BUS] [HEX_ADDRESS] [REGISTER] [HEX_VALUE]")
+    else:
+      print("Invalid command.")
+  else:
+    print("Empty command.")
